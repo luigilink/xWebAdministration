@@ -1,6 +1,5 @@
-
-$script:DSCModuleName      = 'xWebAdministration'
-$script:DSCResourceName    = 'MSFT_xIISHandler'
+$Global:DSCModuleName      = 'xWebAdministration'
+$Global:DSCResourceName    = 'MSFT_xIISHandler'
 
 #region HEADER
 [String] $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
@@ -12,27 +11,27 @@ if ( (-not (Test-Path -Path (Join-Path -Path $moduleRoot -ChildPath 'DSCResource
 
 Import-Module (Join-Path -Path $moduleRoot -ChildPath 'DSCResource.Tests\TestHelper.psm1') -Force
 $TestEnvironment = Initialize-TestEnvironment `
-    -DSCModuleName $script:DSCModuleName `
-    -DSCResourceName $script:DSCResourceName `
+    -DSCModuleName $Global:DSCModuleName `
+    -DSCResourceName $Global:DSCResourceName `
     -TestType Integration
 #endregion
 
-[string]$tempName = "$($script:DSCResourceName)_" + (Get-Date).ToString("yyyyMMdd_HHmmss")
+[string]$tempName = "$($Global:DSCResourceName)_" + (Get-Date).ToString("yyyyMMdd_HHmmss")
 
 # Using try/finally to always cleanup even if something awful happens.
 try
 {
     #region Integration Tests
-    $ConfigFile = Join-Path -Path $PSScriptRoot -ChildPath "$($script:DSCResourceName).config.ps1"
+    $ConfigFile = Join-Path -Path $PSScriptRoot -ChildPath "$($Global:DSCResourceName).config.ps1"
     . $ConfigFile
 
     $null = Backup-WebConfiguration -Name $tempName
 
-    Describe "$($script:DSCResourceName)_Integration" {
+    Describe "$($Global:DSCResourceName)_Integration" {
         #region DEFAULT TESTS
         It 'Should compile without throwing' {
             {
-                Invoke-Expression -Command "$($script:DSCResourceName)_RemoveHandler -OutputPath `$TestEnvironment.WorkingFolder"
+                Invoke-Expression -Command "$($Global:DSCResourceName)_RemoveHandler -OutputPath `$TestEnvironment.WorkingFolder"
                 Start-DscConfiguration -Path $TestEnvironment.WorkingFolder -ComputerName localhost -Wait -Verbose -Force
             } | Should not throw
         }
@@ -49,23 +48,23 @@ try
             {
                 # TRACEVerbHandler is usually there, remove it
 
-                Invoke-Expression -Command "$($script:DSCResourceName)_AddHandler -OutputPath `$TestEnvironment.WorkingFolder"
+                Invoke-Expression -Command "$($Global:DSCResourceName)_AddHandler -OutputPath `$TestEnvironment.WorkingFolder"
                 Start-DscConfiguration -Path $TestEnvironment.WorkingFolder -ComputerName localhost -Wait -Verbose -Force
             }  | should not throw
 
             [string]$filter = "system.webServer/handlers/Add[@Name='WebDAV']"
-            ((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter $filter -Name .) | Measure-Object).Count | should be 1
+            ((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter $filter -Name .) | Measure).Count | should be 1
         }
 
         It 'StaticFile handler' {
             # StaticFile is usually there, have it present shouldn't change anything.
             {
-                Invoke-Expression -Command "$($script:DSCResourceName)_StaticFileHandler -OutputPath `$TestEnvironment.WorkingFolder"
+                Invoke-Expression -Command "$($Global:DSCResourceName)_StaticFileHandler -OutputPath `$TestEnvironment.WorkingFolder"
                 Start-DscConfiguration -Path $TestEnvironment.WorkingFolder -ComputerName localhost -Wait -Verbose -Force
             }  | should not throw
 
             [string]$filter = "system.webServer/handlers/Add[@Name='StaticFile']"
-            ((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter $filter -Name .) | Measure-Object).Count | should be 1
+            ((Get-WebConfigurationProperty -pspath 'MACHINE/WEBROOT/APPHOST' -filter $filter -Name .) | Measure).Count | should be 1
         }
     }
     #endregion

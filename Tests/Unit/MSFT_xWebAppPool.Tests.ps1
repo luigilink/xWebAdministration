@@ -1,11 +1,10 @@
 #requires -Version 4.0
 
-# Suppressing this rule because IIS requires PlainText for one of the functions used in this test
 [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingConvertToSecureStringWithPlainText', '')]
 param ()
 
-$script:DSCModuleName   = 'xWebAdministration'
-$script:DSCResourceName = 'MSFT_xWebAppPool'
+$Global:DSCModuleName   = 'xWebAdministration'
+$Global:DSCResourceName = 'MSFT_xWebAppPool'
 
 #region HEADER
 [String] $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
@@ -17,8 +16,8 @@ if ( (-not (Test-Path -Path (Join-Path -Path $moduleRoot -ChildPath 'DSCResource
 
 Import-Module (Join-Path -Path $moduleRoot -ChildPath 'DSCResource.Tests\TestHelper.psm1') -Force
 $TestEnvironment = Initialize-TestEnvironment `
-    -DSCModuleName $script:DSCModuleName `
-    -DSCResourceName $script:DSCResourceName `
+    -DSCModuleName $Global:DSCModuleName `
+    -DSCResourceName $Global:DSCResourceName `
     -TestType Unit
 #endregion
 
@@ -27,9 +26,9 @@ try
 {
     #region Pester Tests
 
-    InModuleScope $script:DSCResourceName {
+    InModuleScope $Global:DSCResourceName {
 
-        Describe "$($script:DSCResourceName)\Get-TargetResource" {
+        Describe "$($Global:DSCResourceName)\Get-TargetResource" {
 
             Mock Assert-Module
 
@@ -349,7 +348,7 @@ try
 
         }
 
-        Describe "how '$($script:DSCResourceName)\Test-TargetResource' responds to Ensure = 'Absent'" {
+        Describe "how '$($Global:DSCResourceName)\Test-TargetResource' responds to Ensure = 'Absent'" {
 
             Mock Assert-Module
 
@@ -381,7 +380,7 @@ try
 
         }
 
-        Describe "how '$($script:DSCResourceName)\Test-TargetResource' responds to Ensure = 'Present'" {
+        Describe "how '$($Global:DSCResourceName)\Test-TargetResource' responds to Ensure = 'Present'" {
 
             Mock Assert-Module
 
@@ -1699,7 +1698,7 @@ try
 
         }
 
-        Describe "how '$($script:DSCResourceName)\Set-TargetResource' responds to Ensure = 'Absent'" {
+        Describe "how '$($Global:DSCResourceName)\Set-TargetResource' responds to Ensure = 'Absent'" {
 
             Context 'Application pool exists and is started' {
 
@@ -1777,7 +1776,7 @@ try
 
         }
 
-        Describe "how '$($script:DSCResourceName)\Set-TargetResource' responds to Ensure = 'Present'" {
+        Describe "how '$($Global:DSCResourceName)\Set-TargetResource' responds to Ensure = 'Present'" {
 
             Context 'Application pool does not exist' {
 
@@ -3267,7 +3266,7 @@ try
 
         }
 
-        Describe "$($script:DSCResourceName)\Invoke-AppCmd" {
+        Describe "$($Global:DSCResourceName)\Invoke-AppCmd" {
 
             It 'Should throw if AppCmd.exe exits with non-zero exit code' {
 

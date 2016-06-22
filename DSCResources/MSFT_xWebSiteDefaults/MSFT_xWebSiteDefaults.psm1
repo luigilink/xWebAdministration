@@ -185,4 +185,4 @@ Function CheckIISPoshModule
 }
 
 #  FUNCTIONS TO BE EXPORTED 
-Export-ModuleMember -Function *-TargetResource
+Export-ModuleMember -function Get-TargetResource, Set-TargetResource, Test-TargetResource

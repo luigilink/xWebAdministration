@@ -15,7 +15,7 @@ data LocalizedData
 }
 
 <#
-    .SYNOPSIS
+    The Get-TargetResource cmdlet.
     This function will get the Mime type for a file extension
 #>
 function Get-TargetResource
@@ -52,7 +52,7 @@ function Get-TargetResource
 }
 
 <#
-    .SYNOPSIS
+    The Set-TargetResource cmdlet.
     This function set the OverrideMode for a given section if not already correct
 #>
 function Set-TargetResource
@@ -74,7 +74,7 @@ function Set-TargetResource
 }
 
 <#
-    .SYNOPSIS
+    The Test-TargetResource cmdlet.
     This will test if the given section has the required OverrideMode
 #>
 function Test-TargetResource
@@ -131,4 +131,4 @@ Function Get-OverrideMode
 }
 
 #  FUNCTIONS TO BE EXPORTED
-Export-ModuleMember -Function *-TargetResource
+Export-ModuleMember -function Get-TargetResource, Set-TargetResource, Test-TargetResource

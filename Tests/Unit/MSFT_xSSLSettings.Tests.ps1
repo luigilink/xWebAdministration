@@ -1,6 +1,5 @@
-
-$script:DSCModuleName = 'xWebAdministration'
-$script:DSCResourceName = 'MSFT_xSSLSettings'
+$global:DSCModuleName = 'xWebAdministration'
+$global:DSCResourceName = 'MSFT_xSSLSettings'
 
 #region HEADER
 [String] $moduleRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $Script:MyInvocation.MyCommand.Path))
@@ -12,8 +11,8 @@ $script:DSCResourceName = 'MSFT_xSSLSettings'
 
 Import-Module (Join-Path -Path $moduleRoot -ChildPath 'DSCResource.Tests\TestHelper.psm1') -Force
 $TestEnvironment = Initialize-TestEnvironment `
-    -DSCModuleName $script:DSCModuleName `
-    -DSCResourceName $script:DSCResourceName `
+    -DSCModuleName $Global:DSCModuleName `
+    -DSCResourceName $Global:DSCResourceName `
     -TestType Unit
 #endregion
 
@@ -24,18 +23,16 @@ try
     #region Pester Tests
 
     InModuleScope $DSCResourceName {
-    $script:DSCModuleName = 'xWebAdministration'
-    $script:DSCResourceName = 'MSFT_xSSLSettings'
 
-        Describe "$script:DSCResourceName\Test-TargetResource" {
+        Describe "$global:DSCResourceName\Test-TargetResource" {
             Context 'Ensure is Present and SSLSettings is Present' {
                 Mock Get-TargetResource -Verifiable {return @{
                     Name = 'Test'
-                    Bindings = @('Ssl')
+                    Bindings = @('SSL')
                     Ensure = 'Present'
                 }}
 
-                $result = Test-TargetResource -Name 'Test' -Ensure 'Present' -Bindings 'Ssl'
+                $result = Test-TargetResource -Name 'Test' -Ensure 'Present' -Bindings 'SSL'
 
                 Assert-VerifiableMocks
 
@@ -44,14 +41,14 @@ try
                 }
             }
 
-            Context 'Ensure is Absent and SslSettings is Absent' {
+            Context 'Ensure is Absent and SSLSettings is Absent' {
                 Mock Get-TargetResource {return @{
                     Name = 'Test'
-                    Bindings = @('Ssl')
+                    Bindings = @('SSL')
                     Ensure = 'Absent'
                 }}
 
-                $result = Test-TargetResource -Name 'Test' -Ensure 'Absent' -Bindings 'Ssl'
+                $result = Test-TargetResource -Name 'Test' -Ensure 'Absent' -Bindings 'SSL'
 
                 Assert-VerifiableMocks
 
@@ -60,14 +57,14 @@ try
                 }
             }
 
-            Context 'Ensure is Present and SslSettings is Absent' {
+            Context 'Ensure is Present and SSLSettings is Absent' {
                 Mock Get-TargetResource {return @{
                     Name = 'Test'
-                    Bindings = @('Ssl')
+                    Bindings = @('SSL')
                     Ensure = 'Absent'
                 }}
 
-                $result = Test-TargetResource -Name 'Test' -Ensure 'Present' -Bindings 'Ssl'
+                $result = Test-TargetResource -Name 'Test' -Ensure 'Present' -Bindings 'SSL'
 
                 Assert-VerifiableMocks
 
@@ -77,15 +74,15 @@ try
             }
         }
 
-        Describe "$script:DSCResourceName\Get-TargetResource" {
+        Describe "$global:DSCResourceName\Get-TargetResource" {
             Context 'Command finds SSL Settings' {
                 Mock Assert-Module -Verifiable { }
-                Mock Get-WebConfigurationProperty -Verifiable {return 'Ssl'}
+                Mock Get-WebConfigurationProperty -Verifiable {return 'SSL'}
 
-                $result = Get-TargetResource -Name 'Name' -Bindings 'Ssl'
+                $result = Get-TargetResource -Name 'Name' -Bindings 'Test'
                 $expected = @{
                     Name = 'Name'
-                    Bindings = 'Ssl'
+                    Bindings = 'SSL'
                     Ensure = 'Present'
                 }
 
@@ -100,14 +97,14 @@ try
                 }
             }
 
-            Context 'Command does not find Ssl Settings' {
+            Context 'Command does not find SSL Settings' {
                 Mock Assert-Module -Verifiable { }
                 Mock Get-WebConfigurationProperty -Verifiable {return $false}
 
-                $result = Get-TargetResource -Name 'Name' -Bindings 'Ssl'
+                $result = Get-TargetResource -Name 'Name' -Bindings 'Test'
                 $expected = @{
                     Name = 'Name'
-                    Bindings = 'Ssl'
+                    Bindings = 'None'
                     Ensure = 'Absent'
                 }
 
@@ -123,13 +120,13 @@ try
             }
         }
 
-        Describe "$script:DSCResourceName\Set-TargetResource" {
+        Describe "$global:DSCResourceName\Set-TargetResource" {
             Context 'SSL Bindings set to none' {
                 Mock Assert-Module -Verifiable { }
                 Mock Set-WebConfigurationProperty -Verifiable {}
 
-                $result = (Set-TargetResource -Name 'Name' -Bindings '' -Ensure 'Present' -Verbose) 4>&1
-                $string = $LocalizedData.SettingSSLConfig -f 'Name', ''
+                $result = (Set-TargetResource -Name 'Name' -Bindings 'None' -Ensure 'Present' -Verbose) 4>&1
+                $string = $LocalizedData.SettingSSLConfig -f 'Name', 'None'
                 $expected = "Set-TargetResource: $string"
 
                 Assert-VerifiableMocks
@@ -139,12 +136,12 @@ try
                 }
             }
 
-            Context 'Ssl Bindings set to Ssl' {
+            Context 'SSL Bindings set to SSL' {
                 Mock Assert-Module -Verifiable { }
                 Mock Set-WebConfigurationProperty -Verifiable {}
 
-                $result = (Set-TargetResource -Name 'Name' -Bindings 'Ssl' -Ensure 'Present' -Verbose) 4>&1
-                $string = $LocalizedData.SettingSSLConfig -f 'Name', 'Ssl'
+                $result = (Set-TargetResource -Name 'Name' -Bindings 'SSL' -Ensure 'Present' -Verbose) 4>&1
+                $string = $LocalizedData.SettingSSLConfig -f 'Name', 'SSL'
                 $expected = "Set-TargetResource: $string"
 
                 Assert-VerifiableMocks
@@ -154,7 +151,7 @@ try
                 }
             }
 
-            Context 'Ssl Bindings set to Ssl,SslNegotiateCert,SslRequireCert' {
+            Context 'SSL Bindings set to Ssl,SslNegotiateCert,SslRequireCert' {
                 Mock Assert-Module -Verifiable { }
                 Mock Set-WebConfigurationProperty -Verifiable {}
 

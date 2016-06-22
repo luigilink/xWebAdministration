@@ -114,7 +114,7 @@ function Get-TargetResource
 
     $cimCredential = $null
 
-    if ($null -eq $appPool)
+    if ($appPool -eq $null)
     {
         Write-Verbose -Message ($LocalizedData['VerboseAppPoolNotFound'] -f $Name)
 
@@ -225,9 +225,7 @@ function Set-TargetResource
         )]
         [String] $identityType,
 
-        [System.Management.Automation.PSCredential]
-        [System.Management.Automation.Credential()] 
-        $Credential,
+        [System.Management.Automation.PSCredential] $Credential,
 
         [ValidateScript({
             ([ValidateRange(0, 43200)]$valueInMinutes = [TimeSpan]::Parse($_).TotalMinutes); $?
@@ -335,7 +333,7 @@ function Set-TargetResource
     if ($Ensure -eq 'Present')
     {
         # Create Application Pool
-        if ($null -eq $appPool)
+        if ($appPool -eq $null)
         {
             Write-Verbose -Message ($LocalizedData['VerboseAppPoolNotFound'] -f $Name)
             Write-Verbose -Message ($LocalizedData['VerboseNewAppPool'] -f $Name)
@@ -344,7 +342,7 @@ function Set-TargetResource
         }
 
         # Set Application Pool Properties
-        if ($null -ne $appPool)
+        if ($appPool -ne $null)
         {
             Write-Verbose -Message ($LocalizedData['VerboseAppPoolFound'] -f $Name)
 
@@ -502,7 +500,7 @@ function Set-TargetResource
     else
     {
         # Remove Application Pool
-        if ($null -ne $appPool)
+        if ($appPool -ne $null)
         {
             Write-Verbose -Message ($LocalizedData['VerboseAppPoolFound'] -f $Name)
 
@@ -586,9 +584,7 @@ function Test-TargetResource
         )]
         [String] $identityType,
 
-        [System.Management.Automation.PSCredential]
-        [System.Management.Automation.Credential()]
-        $Credential,
+        [System.Management.Automation.PSCredential] $Credential,
 
         [ValidateScript({
             ([ValidateRange(0, 43200)]$valueInMinutes = [TimeSpan]::Parse($_).TotalMinutes); $?
@@ -691,13 +687,13 @@ function Test-TargetResource
         Where-Object -FilterScript {$_.name -eq $Name}
 
     if (
-        ($Ensure -eq 'Absent' -and $null -ne $appPool) -or
-        ($Ensure -eq 'Present' -and $null -eq $appPool)
+        ($Ensure -eq 'Absent' -and $appPool -ne $null) -or
+        ($Ensure -eq 'Present' -and $appPool -eq $null)
     )
     {
         $inDesiredState = $false
 
-        if ($null -ne $appPool)
+        if ($appPool -ne $null)
         {
             Write-Verbose -Message ($LocalizedData['VerboseAppPoolFound'] -f $Name)
         }
@@ -709,7 +705,7 @@ function Test-TargetResource
         Write-Verbose -Message ($LocalizedData['VerboseEnsureNotInDesiredState'] -f $Name)
     }
 
-    if ($Ensure -eq 'Present' -and $null -ne $appPool)
+    if ($Ensure -eq 'Present' -and $appPool -ne $null)
     {
         Write-Verbose -Message ($LocalizedData['VerboseAppPoolFound'] -f $Name)
 
@@ -874,5 +870,3 @@ function Invoke-AppCmd
 }
 
 #endregion Helper Functions
-
-Export-ModuleMember -Function *-TargetResource

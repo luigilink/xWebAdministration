@@ -1,4 +1,3 @@
-
 function Get-TargetResource
 {
     [CmdletBinding()]
@@ -20,7 +19,7 @@ function Get-TargetResource
     )
 
     $existingvalue = Get-ItemValue -key $Key -isAttribute $false -websitePath $WebsitePath -configSection $ConfigSection
-    if($null -eq $existingvalue)
+    if($existingvalue -eq $null)
     {
         $existingvalue = Get-ItemValue -key $Key -isAttribute $true -websitePath $WebsitePath -configSection $ConfigSection
     }
@@ -73,13 +72,11 @@ function Set-TargetResource
 
     if($Ensure -eq 'Present')
     {
-        $existingvalue = Get-ItemValue -key $Key -isAttribute $IsAttribute `
-                                       -websitePath $WebsitePath -configSection $ConfigSection
+        $existingvalue = Get-ItemValue -key $Key -isAttribute $IsAttribute -websitePath $WebsitePath -configSection $ConfigSection
 
-        if((!$IsAttribute -and ($null -eq $existingvalue)) -or ($IsAttribute -and ($existingvalue.Length -eq 0)))
+        if((!$IsAttribute -and ($existingvalue -eq $null)) -or ($IsAttribute -and ($existingvalue.Length -eq 0)))
         {
-            Add-Item -key $Key -value $Value -isAttribute $IsAttribute `
-                     -websitePath $WebsitePath -configSection $ConfigSection
+            Add-Item -key $Key -value $Value -isAttribute $IsAttribute -websitePath $WebsitePath -configSection $ConfigSection
         }
         else
         {
@@ -88,8 +85,7 @@ function Set-TargetResource
             {
                 $propertyName = $Key
             }
-            Edit-Item -propertyName $propertyName -oldValue $existingvalue -newValue $Value `
-                      -isAttribute $IsAttribute -websitePath $WebsitePath -configSection $ConfigSection
+            Modify-Item -propertyName $propertyName -oldValue $existingvalue -newValue $Value -isAttribute $IsAttribute -websitePath $WebsitePath -configSection $ConfigSection
         }
     }
     else
@@ -139,7 +135,7 @@ function Test-TargetResource
     {
         if(!$IsAttribute)
         {
-            if(($null -eq $existingvalue) -or ($existingvalue -ne $Value))
+            if(($existingvalue -eq $null) -or ($existingvalue -ne $Value))
             {
                 return $false
             }
@@ -164,7 +160,7 @@ function Test-TargetResource
     {
         if(!$IsAttribute)
         {
-            if(($null -eq $existingvalue))
+            if(($existingvalue -eq $null))
             {
                 return $true
             }
@@ -204,8 +200,7 @@ function Add-item([string]$key, [string]$value, [Boolean]$isAttribute, [string]$
     }
 }
 
-function Edit-Item([string]$propertyName, [string]$oldValue, [string]$newValue, `
-                   [Boolean]$isAttribute, [string]$websitePath, [string]$configSection)
+function Modify-Item([string]$propertyName, [string]$oldValue, [string]$newValue, [Boolean]$isAttribute, [string]$websitePath, [string]$configSection)
 {
     $defaultFilter = $configSection
 
@@ -213,13 +208,11 @@ function Edit-Item([string]$propertyName, [string]$oldValue, [string]$newValue, 
     {
         $filter= "$defaultFilter/add[@$propertyName=`'$oldValue`']"
 
-        Set-WebConfigurationProperty -filter $filter -PSPath $websitePath -name $propertyName `
-                                     -value $newValue -WarningAction Stop
+        Set-WebConfigurationProperty -filter $filter -PSPath $websitePath -name $propertyName -value $newValue -WarningAction Stop
     }
     else
     {
-        Set-WebConfigurationProperty -Filter $defaultFilter -PSPath $websitePath `
-                                     -name $propertyName -value $newValue -WarningAction Stop
+        Set-WebConfigurationProperty -Filter $defaultFilter -PSPath $websitePath -name $propertyName -value $newValue -WarningAction Stop
     }
 }
 
