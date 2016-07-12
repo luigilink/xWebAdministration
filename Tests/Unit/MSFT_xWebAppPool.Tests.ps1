@@ -3266,7 +3266,39 @@ try
 
         }
 
+<<<<<<< HEAD
         Describe "$($Global:DSCResourceName)\Invoke-AppCmd" {
+=======
+        Describe "MSFT_xWebAppPool\Get-Property" {
+
+            It 'Should return the value of $appPool.property1' {
+                $appPool = @{ property1 = 'result' }
+                $path = 'property1'
+                Get-Property -Object $appPool -PropertyName $path |
+                Should Be 'result'
+
+            }
+
+            It 'Should return the value of $appPool.property1.property2' {
+                $appPool = @{ property1 = @{ property2 = 'result' } }
+                $path = 'property1.property2'
+                Get-Property -Object $appPool -PropertyName $path |
+                Should Be 'result'
+
+            }
+
+            It 'Should return the value of $appPool.property1.property2.property3' {
+                $appPool = @{ property1 = @{ property2 = @{ property3 ='result' } } }
+                $path = 'property1.property2.property3'
+                Get-Property -Object $appPool -PropertyName $path |
+                Should Be 'result'
+
+            }
+
+        }
+
+        Describe "$($script:DSCResourceName)\Invoke-AppCmd" {
+>>>>>>> upstream/dev
 
             It 'Should throw if AppCmd.exe exits with non-zero exit code' {
 

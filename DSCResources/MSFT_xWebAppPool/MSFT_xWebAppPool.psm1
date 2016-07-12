@@ -1,31 +1,31 @@
 #requires -Version 4.0 -Modules CimCmdlets
 
 # Load the Helper Module
-Import-Module -Name "$PSScriptRoot\..\Helper.psm1" -Verbose:$false
+Import-Module -Name "$PSScriptRoot\..\Helper.psm1"
 
 # Localized messages
 data LocalizedData
 {
     # culture="en-US"
     ConvertFrom-StringData -StringData @'
-ErrorAppCmdNonZeroExitCode        = AppCmd.exe has exited with error code "{0}".
-ErrorAppCmdPathNotFound           = AppCmd.exe could not be found at path "{0}".
-VerboseAppPoolFound               = Application pool "{0}" was found.
-VerboseAppPoolNotFound            = Application pool "{0}" was not found.
-VerboseEnsureNotInDesiredState    = The "Ensure" state of application pool "{0}" does not match the desired state.
-VerbosePropertyNotInDesiredState  = The "{0}" property of application pool "{1}" does not match the desired state.
-VerboseCredentialToBeCleared      = Custom account credentials of application pool "{0}" need to be cleared because the "identityType" property is not set to "SpecificUser".
-VerboseCredentialToBeIgnored      = The "Credential" property is only valid when the "identityType" property is set to "SpecificUser".
-VerboseResourceInDesiredState     = The target resource is already in the desired state. No action is required.
-VerboseResourceNotInDesiredState  = The target resource is not in the desired state.
-VerboseNewAppPool                 = Creating application pool "{0}".
-VerboseRemoveAppPool              = Removing application pool "{0}".
-VerboseStartAppPool               = Starting application pool "{0}".
-VerboseStopAppPool                = Stopping application pool "{0}".
-VerboseSetProperty                = Setting the "{0}" property of application pool "{1}".
-VerboseClearCredential            = Clearing custom account credentials of application pool "{0}" because the "identityType" property is not set to "SpecificUser".
-VerboseRestartScheduleValueAdd    = Adding value "{0}" to the "restartSchedule" collection of application pool "{1}".
-VerboseRestartScheduleValueRemove = Removing value "{0}" from the "restartSchedule" collection of application pool "{1}".
+        ErrorAppCmdNonZeroExitCode        = AppCmd.exe has exited with error code "{0}".
+        ErrorAppCmdPathNotFound           = AppCmd.exe could not be found at path "{0}".
+        VerboseAppPoolFound               = Application pool "{0}" was found.
+        VerboseAppPoolNotFound            = Application pool "{0}" was not found.
+        VerboseEnsureNotInDesiredState    = The "Ensure" state of application pool "{0}" does not match the desired state.
+        VerbosePropertyNotInDesiredState  = The "{0}" property of application pool "{1}" does not match the desired state.
+        VerboseCredentialToBeCleared      = Custom account credentials of application pool "{0}" need to be cleared because the "identityType" property is not set to "SpecificUser".
+        VerboseCredentialToBeIgnored      = The "Credential" property is only valid when the "identityType" property is set to "SpecificUser".
+        VerboseResourceInDesiredState     = The target resource is already in the desired state. No action is required.
+        VerboseResourceNotInDesiredState  = The target resource is not in the desired state.
+        VerboseNewAppPool                 = Creating application pool "{0}".
+        VerboseRemoveAppPool              = Removing application pool "{0}".
+        VerboseStartAppPool               = Starting application pool "{0}".
+        VerboseStopAppPool                = Stopping application pool "{0}".
+        VerboseSetProperty                = Setting the "{0}" property of application pool "{1}".
+        VerboseClearCredential            = Clearing custom account credentials of application pool "{0}" because the "identityType" property is not set to "SpecificUser".
+        VerboseRestartScheduleValueAdd    = Adding value "{0}" to the "restartSchedule" collection of application pool "{1}".
+        VerboseRestartScheduleValueRemove = Removing value "{0}" from the "restartSchedule" collection of application pool "{1}".
 '@
 }
 
@@ -97,6 +97,11 @@ data PropertyData
 
 function Get-TargetResource
 {
+    <#
+    .SYNOPSIS
+        This will return a hashtable of results 
+    #>
+
     [CmdletBinding()]
     [OutputType([Hashtable])]
     param
@@ -150,7 +155,8 @@ function Get-TargetResource
         }
     ).ForEach(
         {
-            $returnValue.Add($_.Name, (Invoke-Expression -Command ('$appPool.{0}' -f $_.Path)))
+            $property = Get-Property -Object $appPool -PropertyName $_.Path
+            $returnValue.Add($_.Name, $property)
         }
     )
 
@@ -165,6 +171,11 @@ function Get-TargetResource
 
 function Set-TargetResource
 {
+    <#
+    .SYNOPSIS
+        This will set the desired state
+    #>
+    
     [CmdletBinding(SupportsShouldProcess = $true)]
     param
     (
@@ -220,8 +231,8 @@ function Set-TargetResource
         [UInt32] $cpuSmpProcessorAffinityMask2,
 
         [ValidateSet(
-            'ApplicationPoolIdentity', 'LocalService', 'LocalSystem',
-            'NetworkService', 'SpecificUser'
+                'ApplicationPoolIdentity', 'LocalService', 'LocalSystem',
+                'NetworkService', 'SpecificUser'
         )]
         [String] $identityType,
 
@@ -355,10 +366,10 @@ function Set-TargetResource
                 {
                     $propertyName = $_.Name
                     $propertyPath = $_.Path
+                    $property = Get-Property -Object $appPool -PropertyName $propertyPath
 
-                    if (
-                        $PSBoundParameters[$propertyName] -ne
-                        (Invoke-Expression -Command ('$appPool.{0}' -f $propertyPath))
+                    if ( 
+                        $PSBoundParameters[$propertyName] -ne $property
                     )
                     {
                         Write-Verbose -Message (
@@ -452,32 +463,34 @@ function Set-TargetResource
 
                 Compare-Object -ReferenceObject $restartScheduleDesired `
                     -DifferenceObject $restartScheduleCurrent |
-                ForEach-Object -Process {
+                        ForEach-Object -Process {
 
-                    if ($_.SideIndicator -eq '<=') # Add value
-                    {
-                        Write-Verbose -Message (
-                            $LocalizedData['VerboseRestartScheduleValueAdd'] -f
-                                $_.InputObject, $Name
-                        )
+                            # Add value
+                            if ($_.SideIndicator -eq '<=')
+                            {
+                                Write-Verbose -Message (
+                                    $LocalizedData['VerboseRestartScheduleValueAdd'] -f
+                                        $_.InputObject, $Name
+                                )
 
-                        Invoke-AppCmd -ArgumentList 'set', 'apppool', $Name, (
-                            "/+recycling.periodicRestart.schedule.[value='{0}']" -f $_.InputObject
-                        )
-                    }
-                    else # Remove value
-                    {
-                        Write-Verbose -Message (
-                            $LocalizedData['VerboseRestartScheduleValueRemove'] -f
-                                $_.InputObject, $Name
-                        )
+                                Invoke-AppCmd -ArgumentList 'set', 'apppool', $Name, (
+                                    "/+recycling.periodicRestart.schedule.[value='{0}']" -f $_.InputObject
+                                )
+                            }
+                            # Remove value
+                            else
+                            {
+                                Write-Verbose -Message (
+                                    $LocalizedData['VerboseRestartScheduleValueRemove'] -f
+                                        $_.InputObject, $Name
+                                )
 
-                        Invoke-AppCmd -ArgumentList 'set', 'apppool', $Name, (
-                            "/-recycling.periodicRestart.schedule.[value='{0}']" -f $_.InputObject
-                        )
-                    }
+                                Invoke-AppCmd -ArgumentList 'set', 'apppool', $Name, (
+                                    "/-recycling.periodicRestart.schedule.[value='{0}']" -f $_.InputObject
+                                )
+                            }
 
-                }
+                        }
             }
 
             if ($PSBoundParameters.ContainsKey('State') -and $appPool.state -ne $State)
@@ -524,6 +537,12 @@ function Set-TargetResource
 
 function Test-TargetResource
 {
+    <#
+    .SYNOPSIS
+        This tests the desired state. If the state is not correct it will return $false.
+        If the state is correct it will return $true
+    #>
+
     [OutputType([Boolean])]
     param
     (
@@ -579,8 +598,8 @@ function Test-TargetResource
         [UInt32] $cpuSmpProcessorAffinityMask2,
 
         [ValidateSet(
-            'ApplicationPoolIdentity', 'LocalService', 'LocalSystem',
-            'NetworkService', 'SpecificUser'
+                'ApplicationPoolIdentity', 'LocalService', 'LocalSystem',
+                'NetworkService', 'SpecificUser'
         )]
         [String] $identityType,
 
@@ -718,10 +737,10 @@ function Test-TargetResource
             {
                 $propertyName = $_.Name
                 $propertyPath = $_.Path
+                $property = Get-Property -Object $appPool -PropertyName $propertyPath
 
                 if (
-                    $PSBoundParameters[$propertyName] -ne
-                    (Invoke-Expression -Command ('$appPool.{0}' -f $propertyPath))
+                    $PSBoundParameters[$propertyName] -ne $property
                 )
                 {
                     Write-Verbose -Message (
@@ -835,6 +854,33 @@ function Test-TargetResource
 }
 
 #region Helper Functions
+
+function Get-Property 
+{
+    param 
+    (
+        [object] $Object,
+        [string] $PropertyName)
+
+    $parts = $PropertyName.Split('.')
+    $firstPart = $parts[0]
+
+    $value = $Object.$firstPart
+    if($parts.Count -gt 1)
+    {
+        $newParts = @()
+        1..($parts.Count -1) | ForEach-Object{
+            $newParts += $parts[$_]
+        }
+
+        $newName = ($newParts -join '.')
+        return Get-Property -Object $value -PropertyName $newName
+    }
+    else
+    {
+        return $value
+    }
+} 
 
 function Invoke-AppCmd
 {

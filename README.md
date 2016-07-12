@@ -1,8 +1,11 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/gnsxkjxht31ctan1/branch/master?svg=true)](https://ci.appveyor.com/project/PowerShell/xwebadministration/branch/master)
+﻿[![Build status](https://ci.appveyor.com/api/projects/status/gnsxkjxht31ctan1/branch/master?svg=true)](https://ci.appveyor.com/project/PowerShell/xwebadministration/branch/master)
 
 # xWebAdministration
 
 The **xWebAdministration** module contains the **xIISModule**, **xWebAppPool**, **xWebsite**, **xWebApplication**, **xWebVirtualDirectory**, **xSSLSettings** and **xWebConfigKeyValue** DSC resources for creating and configuring various IIS artifacts.
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
 ## Contributing
 Please check out common DSC Resources [contributing guidelines](https://github.com/PowerShell/DscResource.Kit/blob/master/CONTRIBUTING.md).
@@ -184,6 +187,13 @@ Currently, only FastCgiModule is supported.
 ## Versions
 
 ### Unreleased
+* Converted appveyor.yml to install Pester from PSGallery instead of from Chocolatey.
+* Updated appveyor.yml to use the default image.
+
+### 1.12.0.0
+* **xWebAppPool** updates:
+    * Replaced 3 calls to Invoke-Expression with a call to a new helper function - Get-Property
+    
 * **xWebsite** updates:
     * Bugfix for #131 The site name should be passed in as argument for Test-AuthenticationInfo 
 
